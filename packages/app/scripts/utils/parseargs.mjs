@@ -1,8 +1,8 @@
 // @ts-check
-import { cliui } from "@isaacs/cliui";
 import * as path from "node:path";
 import * as util from "node:util";
 import manifest from "../../package.json" with { type: "json" };
+import { cliui } from "./cliui.mjs";
 
 /** @import { Args, Options } from "../types.ts"; */
 
