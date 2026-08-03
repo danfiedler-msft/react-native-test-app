@@ -204,7 +204,6 @@ describe("npm pack", () => {
       "scripts/init.mjs",
       "scripts/schema.mjs",
       "scripts/template.mjs",
-      "scripts/utils/cliui.mjs",
       "scripts/utils/colors.mjs",
       "scripts/utils/filesystem.mjs",
       "scripts/utils/npm.mjs",
