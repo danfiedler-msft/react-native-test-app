@@ -13,15 +13,14 @@ function renderOptions(
   const indent = "  ";
   const minWidth =
     Math.max(...flags.map(([flag]) => flag.length)) + indent.length * 2;
-  const padding: [number, number, number, number] = [0, 0, 0, 0];
 
   const ui = cliui({ width });
   for (const [flag, config] of flags) {
     ui.div(
-      { text: "", width: 2, padding },
-      { text: config.short ? `-${config.short},` : "", width: 4, padding },
-      { text: `--${flag}`, width: minWidth + 2, padding },
-      { text: config.description, padding }
+      { text: "", width: 2 },
+      { text: config.short ? `-${config.short},` : "", width: 4 },
+      { text: `--${flag}`, width: minWidth + 2 },
+      { text: config.description }
     );
   }
   return ui.toString();
@@ -76,12 +75,8 @@ describe("cliui()", () => {
   });
 
   it("hard-breaks words that are longer than the column width", () => {
-    const padding: [number, number, number, number] = [0, 0, 0, 0];
     const ui = cliui({ width: 12 });
-    ui.div(
-      { text: "x", width: 2, padding },
-      { text: "abcdefghijklmnop", padding }
-    );
+    ui.div({ text: "x", width: 2 }, { text: "abcdefghijklmnop" });
     equal(ui.toString(), ["x abcdefghij", "  klmnop"].join("\n"));
   });
 });

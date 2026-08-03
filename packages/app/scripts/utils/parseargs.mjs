@@ -27,15 +27,14 @@ function formatHelp(description, options) {
   const indent = "  ";
   const minWidth =
     Math.max(...flags.map(([flag]) => flag.length)) + indent.length * 2;
-  const padding = [0, 0, 0, 0];
 
   const ui = cliui({ width: process.stdout.columns ?? 80 });
   for (const [flag, config] of flags) {
     ui.div(
-      { text: "", width: 2, padding },
-      { text: config.short ? `-${config.short},` : "", width: 4, padding },
-      { text: `--${flag}`, width: minWidth + 2, padding },
-      { text: config.description, padding }
+      { text: "", width: 2 },
+      { text: config.short ? `-${config.short},` : "", width: 4 },
+      { text: `--${flag}`, width: minWidth + 2 },
+      { text: config.description }
     );
   }
 

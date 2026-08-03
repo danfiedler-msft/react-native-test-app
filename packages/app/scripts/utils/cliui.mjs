@@ -1,28 +1,23 @@
 // @ts-check
 
 /**
- * Minimal, dependency-free replacement for the subset of `@isaacs/cliui` that
- * this package uses (see `formatHelp` in `parseargs.mjs`).
+ * Minimal, dependency-free helper for laying out `--flag   description` help
+ * output (see `formatHelp` in `parseargs.mjs`). It is not a general-purpose
+ * replacement for `@isaacs/cliui`; it only supports the single shape used to
+ * render help.
  *
- * Only the features actually exercised are implemented: fixed-width leading
- * columns, a single flexible trailing column, and word-wrapping within each
- * column. This intentionally avoids the upstream dependency chain
- * (`string-width`/`strip-ansi`/`wrap-ansi`) while reproducing its output for
- * plain (non-ANSI) text.
+ * Each row is made up of one or more fixed-width leading columns (the flag
+ * names, which are short enough to never overflow their width) followed by a
+ * single flexible column (the description) that word-wraps to fill the
+ * remaining terminal width. Wrapped continuation lines are indented so they
+ * align under the flexible column.
  *
- * Intentional limitations:
- *   - Widths are measured with `String.length`; ANSI escape codes and
- *     wide/CJK characters are not accounted for.
- *   - `padding` is accepted (for API compatibility) but ignored, and `align`
- *     is not supported. Neither is used by the callers.
+ * Widths are measured with `String.length`, so ANSI escape codes and wide/CJK
+ * characters are not accounted for. This is fine for plain help text.
  */
 
 /**
- * @typedef {{
- *   text: string;
- *   width?: number;
- *   padding?: number[];
- * }} Column
+ * @typedef {{ text: string; width?: number }} Column
  */
 
 /**
@@ -112,28 +107,6 @@ function wrapText(text, width) {
   return text.split("\n").flatMap((line) => wrapLine(line, columns));
 }
 
-/**
- * Resolves the rendered width of each column in a row. Columns with an explicit
- * `width` keep it; the remaining space is split evenly between the flexible
- * columns, with a minimum of one column each.
- * @param {Column[]} row
- * @param {number} totalWidth
- * @returns {number[]}
- */
-function columnWidths(row, totalWidth) {
-  let flexible = 0;
-  let remaining = totalWidth;
-  for (const col of row) {
-    if (col.width) {
-      remaining -= col.width;
-    } else {
-      flexible++;
-    }
-  }
-  const flexWidth = flexible > 0 ? Math.floor(remaining / flexible) : 0;
-  return row.map((col) => col.width ?? Math.max(flexWidth, 1));
-}
-
 class UI {
   /** @param {{ width: number }} opts */
   constructor(opts) {
@@ -143,13 +116,12 @@ class UI {
   }
 
   /**
-   * Records a row made up of one or more columns.
+   * Records a row made up of one or more leading columns and a flexible
+   * trailing column.
    * @param {...Column} columns
-   * @returns {Column[]}
    */
   div(...columns) {
     this.rows.push(columns);
-    return columns;
   }
 
   /** @returns {string} */
@@ -157,16 +129,22 @@ class UI {
     /** @type {string[]} */
     const lines = [];
     for (const row of this.rows) {
-      const widths = columnWidths(row, this.width);
-      const wrapped = row.map((col, i) => wrapText(col.text, widths[i]));
-      const height = Math.max(...wrapped.map((cell) => cell.length));
-      for (let r = 0; r < height; ++r) {
-        let line = "";
-        for (let c = 0; c < row.length; ++c) {
-          line += (wrapped[c][r] ?? "").padEnd(widths[c]);
-        }
-        // Trim trailing padding, matching `@isaacs/cliui`.
-        lines.push(line.replace(/ +$/, ""));
+      // All columns except the last are fixed-width and short enough to fit;
+      // the last column is flexible and fills the remaining width.
+      const leading = row.slice(0, -1);
+      const flexible = row[row.length - 1];
+      const indent = leading.reduce((sum, col) => sum + (col.width ?? 0), 0);
+      const flexWidth = flexible.width ?? Math.max(this.width - indent, 1);
+
+      const prefix = leading
+        .map((col) => col.text.padEnd(col.width ?? 0))
+        .join("");
+      const wrapped = wrapText(flexible.text, flexWidth);
+      const continuation = " ".repeat(indent);
+
+      lines.push((prefix + wrapped[0]).replace(/ +$/, ""));
+      for (let r = 1; r < wrapped.length; ++r) {
+        lines.push((continuation + wrapped[r]).replace(/ +$/, ""));
       }
     }
     return lines.join("\n");
@@ -174,7 +152,7 @@ class UI {
 }
 
 /**
- * Creates a new layout builder.
+ * Creates a new help-output layout builder.
  * @param {{ width?: number }} [opts]
  * @returns {UI}
  */
