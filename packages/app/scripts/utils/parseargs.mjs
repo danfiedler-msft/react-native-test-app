@@ -23,20 +23,32 @@ function coerce(values, _options) {
  * @returns {string[]}
  */
 export function wordWrap(text, width) {
-  const words = text.split(" ");
   const lines = [];
-  let line = "";
-  for (const word of words) {
-    if (line.length === 0) {
-      line = word;
-    } else if (line.length + 1 + word.length <= width) {
-      line += ` ${word}`;
-    } else {
-      lines.push(line);
-      line = word;
+  let lineStart = 0; // Start index of the current line within `text`.
+  let lineEnd = 0; // End index (exclusive) of the current line's last word.
+  let wordStart = 0; // Start index of the word currently being scanned.
+
+  for (let i = 0; i <= text.length; i++) {
+    if (i < text.length && text[i] !== " ") {
+      continue;
     }
+    if (wordStart === i) {
+      // Collapse consecutive spaces; nothing to do for an empty word.
+      wordStart = i + 1;
+      continue;
+    }
+    if (lineEnd === lineStart || i - lineStart <= width) {
+      // Either this is the first word on the line (always accepted, even if
+      // it overflows `width`), or it still fits within `width`.
+      lineEnd = i;
+    } else {
+      lines.push(text.slice(lineStart, lineEnd));
+      lineStart = wordStart;
+      lineEnd = i;
+    }
+    wordStart = i + 1;
   }
-  lines.push(line);
+  lines.push(text.slice(lineStart, lineEnd));
   return lines;
 }
 

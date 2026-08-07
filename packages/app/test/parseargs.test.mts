@@ -24,6 +24,10 @@ describe("wordWrap()", () => {
   it("returns a single empty line for empty text", () => {
     deepEqual(wordWrap("", 10), [""]);
   });
+
+  it("returns a single empty line for text that is only whitespace", () => {
+    deepEqual(wordWrap("   ", 10), [""]);
+  });
 });
 
 describe("formatOptionsTable()", () => {
@@ -53,10 +57,11 @@ describe("formatOptionsTable()", () => {
   });
 
   it("uses blank spaces instead of a short flag when not provided", () => {
-    const lines = formatOptionsTable(options, 80).split("\n");
-    const platformLine = lines.find((line) => line.includes("--platform"));
-    equal(platformLine?.startsWith("      --platform"), true);
-    equal(platformLine?.slice(2, 6), "    ");
+    const lines = formatOptionsTable(
+      { destination: { description: "Destination path for the app" } },
+      80,
+    ).split("\n");
+    equal(lines[0], "      --destination    Destination path for the app");
   });
 
   it("wraps long descriptions and aligns continuation lines", () => {
