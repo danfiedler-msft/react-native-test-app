@@ -52,10 +52,11 @@ describe("formatOptionsTable()", () => {
     ]);
   });
 
-  it("omits the short flag when not provided", () => {
+  it("uses blank spaces instead of a short flag when not provided", () => {
     const lines = formatOptionsTable(options, 80).split("\n");
     const platformLine = lines.find((line) => line.includes("--platform"));
     equal(platformLine?.startsWith("      --platform"), true);
+    equal(platformLine?.slice(2, 6), "    ");
   });
 
   it("wraps long descriptions and aligns continuation lines", () => {

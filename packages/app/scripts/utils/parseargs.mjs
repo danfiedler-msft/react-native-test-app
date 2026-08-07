@@ -49,9 +49,12 @@ export function wordWrap(text, width) {
  */
 export function formatOptionsTable(options, width) {
   const flags = Object.entries(options);
-  const indent = "  ";
+
+  // Additional space added to the longest flag name so descriptions never
+  // start flush against the flag column; matches the pre-existing spacing.
+  const extraFlagPadding = 4;
   const minWidth =
-    Math.max(...flags.map(([flag]) => flag.length)) + indent.length * 2;
+    Math.max(...flags.map(([flag]) => flag.length)) + extraFlagPadding;
 
   const spacerWidth = 2;
   const shortWidth = 4;
